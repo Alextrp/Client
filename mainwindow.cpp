@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include "help.h"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -19,7 +19,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
-    socket->connectToHost("127.0.0.1",2323);
+    if(ui->lineEdit_2->text() == "")
+    {
+        socket->connectToHost("127.0.0.1",2323);
+    }
+    else
+    {
+        socket->connectToHost(ui->lineEdit_2->text(),2323);
+    }
+
 }
 
 void MainWindow::SendToServer(QString str)
@@ -82,5 +90,13 @@ void MainWindow::on_lineEdit_returnPressed()
 void MainWindow::on_pushButton_2_clicked()
 {
     SendToServer(ui->lineEdit->text());
+}
+
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    MyDialog *dialog = new MyDialog(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->show();
 }
 
