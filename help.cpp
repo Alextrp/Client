@@ -3,7 +3,7 @@
 MyDialog::MyDialog(QWidget *parent) :
     QDialog(parent)
 {
-    setWindowTitle("Dialog");
+    setWindowTitle("Помощь");
     resize(406, 520);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
