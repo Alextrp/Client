@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "help.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QDateTime>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -33,10 +37,20 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::SendToServer(QString str)
 {
+    QJsonObject json;
+    json["id"] = 1;  // Пример заполнения
+    json["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    json["priority"] = 5;  // Пример заполнения
+    json["min_count"] = 10;  // Пример заполнения
+    json["tact_number"] = str.toInt();  // Пример, где номер такта из поля ввода
+
+    QJsonDocument doc(json);
+    QString jsonString = doc.toJson(QJsonDocument::Compact);
+
     Data.clear();
     QDataStream out(&Data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << str;
+    out << quint16(0) << jsonString;
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
@@ -49,10 +63,6 @@ void MainWindow::slotReadyRead()
     in.setVersion(QDataStream::Qt_6_2);
     if(in.status() == QDataStream::Ok)
     {
-        /*QString str;
-        in >> str;
-        ui->textBrowser->append(str);*/
-
         for(;;)
         {
             if(nextBlockSize == 0)
@@ -68,11 +78,31 @@ void MainWindow::slotReadyRead()
                 break;
             }
 
-            QString str;
-            in >> str;
+            QString jsonString;
+            in >> jsonString;
             nextBlockSize = 0;
-            qDebug() << str;
-            ui->textBrowser->append(str);
+
+            QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+            QJsonObject json = doc.object();
+
+            int id = json["id"].toInt();
+            QString timestamp = json["timestamp"].toString();
+            int priority = json["priority"].toInt();
+            int minCount = json["min_count"].toInt();
+            int tactNumber = json["tact_number"].toInt();
+
+            qDebug() << "Received JSON:";
+            qDebug() << "ID:" << id;
+            qDebug() << "Timestamp:" << timestamp;
+            qDebug() << "Priority:" << priority;
+            qDebug() << "Min Count:" << minCount;
+            qDebug() << "Tact Number:" << tactNumber;
+
+            ui->textBrowser->append("ID: " + QString::number(id));
+            ui->textBrowser->append("Timestamp: " + timestamp);
+            ui->textBrowser->append("Priority: " + QString::number(priority));
+            ui->textBrowser->append("Min Count: " + QString::number(minCount));
+            ui->textBrowser->append("Tact Number: " + QString::number(tactNumber));
         }
     }
     else
@@ -80,6 +110,7 @@ void MainWindow::slotReadyRead()
         ui->textBrowser->append("read error");
     }
 }
+
 
 
 void MainWindow::on_lineEdit_returnPressed()
