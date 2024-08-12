@@ -4,6 +4,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDateTime>
+#include <QComboBox>
+#include <QStringList>
+#include "timeСlient.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::readyRead,this,&MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
     nextBlockSize = 0;
+
+    //setupComboBox(ui->);
 }
 
 MainWindow::~MainWindow()
@@ -32,6 +37,13 @@ void MainWindow::on_pushButton_clicked()
     {
         socket->connectToHost(ui->lineEdit_2->text(),2323);
     }
+
+    client = new TimeClient(this);
+
+    // Создаем и настраиваем таймер
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
+    timer->start(1000);
 
 }
 
@@ -132,3 +144,25 @@ void MainWindow::on_pushButton_3_clicked()
     dialog->show();
 }
 
+
+void setupComboBox(QComboBox* comboBox) {
+    QStringList items;
+    items << "одна строка"
+          << "две строки"
+          << "три строки"
+          << "четыре строки"
+          << "один столбец"
+          << "два столбца"
+          << "три столбца"
+          << "четыре столбца"
+          << "один прожектор"
+          << "прямоугольник 1x2"
+          << "прямоугольник 1x3"
+          << "прямоугольник 2x3"
+          << "квадрат 2x2"
+          << "квадрат 3x3"
+          << "квадрат 4x4"
+          << "квадрат 8x8";
+
+    comboBox->addItems(items);
+}

@@ -11,11 +11,13 @@ CONFIG += c++17
 SOURCES += \
     help.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    timeСlient.cpp
 
 HEADERS += \
     help.h \
-    mainwindow.h
+    mainwindow.h \
+    timeСlient.h
 
 FORMS += \
     help.ui \

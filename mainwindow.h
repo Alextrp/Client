@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QTcpSocket>
+#include <QTimer>
+#include <timeСlient.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -33,6 +35,8 @@ private:
     QByteArray Data;
     void SendToServer(QString str);
     quint16 nextBlockSize;
+    QTimer *timer;
+    TimeClient *client;
 
 public slots:
     void slotReadyRead();
