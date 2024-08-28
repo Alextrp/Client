@@ -15,6 +15,7 @@ public:
     explicit TimeClient(QObject *parent = nullptr);
 
     void requestTact();
+    quint64 takt;
 
 private slots:
     void processPendingDatagrams();

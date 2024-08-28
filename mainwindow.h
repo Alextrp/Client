@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <timeСlient.h>
+#include <QComboBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -18,6 +19,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    void setupComboBox(QComboBox* comboBox);
     ~MainWindow();
 
 private slots:
@@ -27,16 +29,19 @@ private slots:
 
     void on_pushButton_2_clicked();
 
-    void on_pushButton_3_clicked();
+    void updateTaktLabel();
+
+    //void on_pushButton_3_clicked();
 
 private:
     Ui::MainWindow *ui;
     QTcpSocket *socket;
     QByteArray Data;
-    void SendToServer(QString str);
+    void SendToServer();
     quint16 nextBlockSize;
     QTimer *timer;
     TimeClient *client;
+
 
 public slots:
     void slotReadyRead();

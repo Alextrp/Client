@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
     nextBlockSize = 0;
 
-    //setupComboBox(ui->);
+    setupComboBox(ui->comboBox);
 }
 
 MainWindow::~MainWindow()
@@ -41,20 +41,34 @@ void MainWindow::on_pushButton_clicked()
     client = new TimeClient(this);
 
     // Создаем и настраиваем таймер
+    // timer = new QTimer(this);
+    // connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
+    // timer->start(1000);
+    // timer = new QTimer(this);
+    // connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
+    // timer->start(1000);
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
+    connect(timer, &QTimer::timeout, this, &MainWindow::updateTaktLabel);  // Обновляем метку каждый раз, когда таймер срабатывает
     timer->start(1000);
+
 
 }
 
-void MainWindow::SendToServer(QString str)
+void MainWindow::updateTaktLabel() {
+    client->takt+=1;
+    ui->label->setText(QString::number(client->takt));
+}
+
+
+void MainWindow::SendToServer()
 {
     QJsonObject json;
-    json["id"] = 1;  // Пример заполнения
+    json["id"] = 1;
     json["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    json["priority"] = 5;  // Пример заполнения
-    json["min_count"] = 10;  // Пример заполнения
-    json["tact_number"] = str.toInt();  // Пример, где номер такта из поля ввода
+    json["config"] = ui->comboBox->currentText();
+    json["priority"] = ui->comboBox_2->currentText().toInt();
+    json["min_count"] = 10;
+    json["tact_number"] = 0;
 
     QJsonDocument doc(json);
     QString jsonString = doc.toJson(QJsonDocument::Compact);
@@ -66,7 +80,8 @@ void MainWindow::SendToServer(QString str)
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
-    ui->lineEdit->clear();
+
+    client->requestTact();
 }
 
 void MainWindow::slotReadyRead()
@@ -99,6 +114,7 @@ void MainWindow::slotReadyRead()
 
             int id = json["id"].toInt();
             QString timestamp = json["timestamp"].toString();
+            QString config = json["config"].toString();
             int priority = json["priority"].toInt();
             int minCount = json["min_count"].toInt();
             int tactNumber = json["tact_number"].toInt();
@@ -112,6 +128,7 @@ void MainWindow::slotReadyRead()
 
             ui->textBrowser->append("ID: " + QString::number(id));
             ui->textBrowser->append("Timestamp: " + timestamp);
+            ui->textBrowser->append("Config: " + config);
             ui->textBrowser->append("Priority: " + QString::number(priority));
             ui->textBrowser->append("Min Count: " + QString::number(minCount));
             ui->textBrowser->append("Tact Number: " + QString::number(tactNumber));
@@ -127,25 +144,25 @@ void MainWindow::slotReadyRead()
 
 void MainWindow::on_lineEdit_returnPressed()
 {
-    SendToServer(ui->lineEdit->text());
+    SendToServer();
 }
 
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    SendToServer(ui->lineEdit->text());
+    SendToServer();
 }
 
 
-void MainWindow::on_pushButton_3_clicked()
-{
-    MyDialog *dialog = new MyDialog(this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->show();
-}
+// void MainWindow::on_pushButton_3_clicked()
+// {
+//     MyDialog *dialog = new MyDialog(this);
+//     dialog->setAttribute(Qt::WA_DeleteOnClose);
+//     dialog->show();
+// }
 
 
-void setupComboBox(QComboBox* comboBox) {
+void MainWindow::setupComboBox(QComboBox* comboBox) {
     QStringList items;
     items << "одна строка"
           << "две строки"

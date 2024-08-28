@@ -12,7 +12,7 @@ void TimeClient::requestTact() {
     jsonObject["type"] = "get_tact";
 
     QJsonDocument jsonDoc(jsonObject);
-    udpSocket->writeDatagram(jsonDoc.toJson(), QHostAddress("127.0.0.1"), 45454);
+    udpSocket->writeDatagram(jsonDoc.toJson(), QHostAddress("127.0.0.1"), 65535);
 
     qDebug() << "Sent request for synchronized tact.";
 }
@@ -25,5 +25,6 @@ void TimeClient::processPendingDatagrams() {
 
         qint64 syncedTact = jsonObject["tact"].toVariant().toLongLong();
         qDebug() << "Received synchronized tact:" << syncedTact;
+        takt = syncedTact;
     }
 }
