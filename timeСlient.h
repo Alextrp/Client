@@ -14,8 +14,8 @@ class TimeClient : public QObject {
 public:
     explicit TimeClient(QObject *parent = nullptr);
 
-    void requestTact();
-    quint64 takt;
+    void requestTact(quint16 portTime);
+    qint64 takt;
 
 private slots:
     void processPendingDatagrams();

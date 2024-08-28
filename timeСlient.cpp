@@ -4,17 +4,20 @@ TimeClient::TimeClient(QObject *parent) : QObject(parent) {
     udpSocket = new QUdpSocket(this);
     connect(udpSocket, &QUdpSocket::readyRead, this, &TimeClient::processPendingDatagrams);
 
-    requestTact();
 }
 
-void TimeClient::requestTact() {
+void TimeClient::requestTact(quint16 portTime) {
     QJsonObject jsonObject;
     jsonObject["type"] = "get_tact";
 
     QJsonDocument jsonDoc(jsonObject);
-    udpSocket->writeDatagram(jsonDoc.toJson(), QHostAddress("127.0.0.1"), 65535);
+    qint64 bytesWritten = udpSocket->writeDatagram(jsonDoc.toJson(), QHostAddress("127.0.0.1"), portTime);
 
-    qDebug() << "Sent request for synchronized tact.";
+    if (bytesWritten == -1) {
+        qDebug() << "Failed to send request for synchronized tact. Error:" << udpSocket->errorString();
+    } else {
+        qDebug() << "Sent request for synchronized tact.";
+    }
 }
 
 void TimeClient::processPendingDatagrams() {

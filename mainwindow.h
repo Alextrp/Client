@@ -21,6 +21,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     void setupComboBox(QComboBox* comboBox);
     ~MainWindow();
+    qint64 portTime;
 
 private slots:
     void on_pushButton_clicked();

@@ -47,6 +47,8 @@ void MainWindow::on_pushButton_clicked()
     // timer = new QTimer(this);
     // connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
     // timer->start(1000);
+
+    client->requestTact(portTime);
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::updateTaktLabel);  // Обновляем метку каждый раз, когда таймер срабатывает
     timer->start(1000);
@@ -62,9 +64,12 @@ void MainWindow::updateTaktLabel() {
 
 void MainWindow::SendToServer()
 {
+    timer->stop();
+    client->requestTact(portTime);
+
     QJsonObject json;
     json["id"] = 1;
-    json["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    json["timestamp"] = client->takt;
     json["config"] = ui->comboBox->currentText();
     json["priority"] = ui->comboBox_2->currentText().toInt();
     json["min_count"] = 10;
@@ -80,8 +85,7 @@ void MainWindow::SendToServer()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
-
-    client->requestTact();
+    timer->start(1000);
 }
 
 void MainWindow::slotReadyRead()
@@ -113,7 +117,7 @@ void MainWindow::slotReadyRead()
             QJsonObject json = doc.object();
 
             int id = json["id"].toInt();
-            QString timestamp = json["timestamp"].toString();
+            quint64 timestamp = json["timestamp"].toInt();
             QString config = json["config"].toString();
             int priority = json["priority"].toInt();
             int minCount = json["min_count"].toInt();
@@ -127,7 +131,7 @@ void MainWindow::slotReadyRead()
             qDebug() << "Tact Number:" << tactNumber;
 
             ui->textBrowser->append("ID: " + QString::number(id));
-            ui->textBrowser->append("Timestamp: " + timestamp);
+            ui->textBrowser->append("Timestamp: " + QString::number(timestamp));
             ui->textBrowser->append("Config: " + config);
             ui->textBrowser->append("Priority: " + QString::number(priority));
             ui->textBrowser->append("Min Count: " + QString::number(minCount));
