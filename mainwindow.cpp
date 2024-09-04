@@ -6,7 +6,7 @@
 #include <QDateTime>
 #include <QComboBox>
 #include <QStringList>
-#include "timeСlient.h"
+#include "timeClient.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -15,78 +15,110 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Client");
     ui->setupUi(this);
     socket = new QTcpSocket(this);
-    connect(socket, &QTcpSocket::readyRead,this,&MainWindow::slotReadyRead);
-    connect(socket, &QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
-    nextBlockSize = 0;
 
+    connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
+    connect(socket, &QTcpSocket::disconnected, this, &MainWindow::handleServerDisconnected);
+    connect(socket, &QTcpSocket::connected, this, &MainWindow::handleConnected);
+    connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::handleError);
+
+    nextBlockSize = 0;
     setupComboBox(ui->comboBox);
+    client = new TimeClient(this);
+
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &MainWindow::updateTaktLabel);
+
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
 void MainWindow::on_pushButton_clicked()
 {
-    if(ui->lineEdit_2->text() == "")
-    {
-        socket->connectToHost("127.0.0.1",2323);
-    }
-    else
-    {
-        socket->connectToHost(ui->lineEdit_2->text(),2323);
-    }
-
-    client = new TimeClient(this);
-
-    // Создаем и настраиваем таймер
-    // timer = new QTimer(this);
-    // connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
-    // timer->start(1000);
-    // timer = new QTimer(this);
-    // connect(timer, &QTimer::timeout, client, &TimeClient::requestTact);
-    // timer->start(1000);
+    QString hostAddress = ui->lineEdit_2->text().isEmpty() ? "127.0.0.1" : ui->lineEdit_2->text();
+    socket->connectToHost(hostAddress, 2323);
 
     client->requestTact(portTime);
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &MainWindow::updateTaktLabel);  // Обновляем метку каждый раз, когда таймер срабатывает
     timer->start(1000);
+}
 
+void MainWindow::handleConnected()
+{
+    qDebug() << "Успешное подключение к серверу!";
+    ui->textBrowser->append("Успешное подключение к серверу!");
+}
+
+void MainWindow::handleServerDisconnected()
+{
+    qDebug() << "Сервер выключен!";
+    ui->textBrowser->append("Сервер выключен!");
+}
+
+void MainWindow::handleError(QAbstractSocket::SocketError socketError)
+{
+    QString errorString;
+
+    switch(socketError)
+    {
+    case QAbstractSocket::ConnectionRefusedError:
+        errorString = "Сервер отказал в подключении.";
+        break;
+    case QAbstractSocket::RemoteHostClosedError:
+        errorString = "Сервер закрыл соединение.";
+        break;
+    case QAbstractSocket::HostNotFoundError:
+        errorString = "Хост не найден.";
+        break;
+    case QAbstractSocket::NetworkError:
+        errorString = "Произошла ошибка сети.";
+        break;
+    default:
+        errorString = socket->errorString();
+        break;
+    }
+
+    qDebug() << "Socket error:" << errorString;
+    ui->textBrowser->append("Socket error: " + errorString);
 
 }
 
-void MainWindow::updateTaktLabel() {
-    client->takt+=1;
+void MainWindow::updateTaktLabel()
+{
+    client->takt += 1;
     ui->label->setText(QString::number(client->takt));
 }
 
-
 void MainWindow::SendToServer()
 {
-    timer->stop();
-    client->requestTact(portTime);
+    if(socket->state() == QAbstractSocket::ConnectedState) {
+        timer->stop();
+        client->requestTact(portTime);
 
-    QJsonObject json;
-    json["id"] = 1;
-    json["timestamp"] = client->takt;
-    json["config"] = ui->comboBox->currentText();
-    json["priority"] = ui->comboBox_2->currentText().toInt();
-    json["min_count"] = 10;
-    json["tact_number"] = 0;
+        QJsonObject json;
+        json["id"] = 1;
+        json["timestamp"] = client->takt;
+        json["config"] = ui->comboBox->currentText();
+        json["priority"] = ui->comboBox_2->currentText().toInt();
+        json["min_count"] = 10;
+        json["tact_number"] = 0;
 
-    QJsonDocument doc(json);
-    QString jsonString = doc.toJson(QJsonDocument::Compact);
+        QJsonDocument doc(json);
+        QString jsonString = doc.toJson(QJsonDocument::Compact);
 
-    Data.clear();
-    QDataStream out(&Data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << jsonString;
-    out.device()->seek(0);
-    out << quint16(Data.size() - sizeof(quint16));
-    socket->write(Data);
-    timer->start(1000);
+        Data.clear();
+        QDataStream out(&Data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_2);
+        out << quint16(0) << jsonString;
+        out.device()->seek(0);
+        out << quint16(Data.size() - sizeof(quint16));
+        socket->write(Data);
+        timer->start(1000);
+    } else {
+        ui->textBrowser->append("Вы не подключены к серверу.");
+    }
 }
+
 
 void MainWindow::slotReadyRead()
 {
@@ -156,14 +188,6 @@ void MainWindow::on_pushButton_2_clicked()
 {
     SendToServer();
 }
-
-
-// void MainWindow::on_pushButton_3_clicked()
-// {
-//     MyDialog *dialog = new MyDialog(this);
-//     dialog->setAttribute(Qt::WA_DeleteOnClose);
-//     dialog->show();
-// }
 
 
 void MainWindow::setupComboBox(QComboBox* comboBox) {

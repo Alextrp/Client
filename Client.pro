@@ -12,12 +12,12 @@ SOURCES += \
     help.cpp \
     main.cpp \
     mainwindow.cpp \
-    timeСlient.cpp
+    timeClient.cpp
 
 HEADERS += \
     help.h \
     mainwindow.h \
-    timeСlient.h
+    timeClient.h
 
 FORMS += \
     help.ui \

@@ -19,6 +19,7 @@ public:
 
 private slots:
     void processPendingDatagrams();
+    void handleSocketError(QAbstractSocket::SocketError socketError);
 
 private:
     QUdpSocket *udpSocket;

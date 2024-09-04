@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QTcpSocket>
 #include <QTimer>
-#include <timeСlient.h>
+#include <timeClient.h>
 #include <QComboBox>
 
 QT_BEGIN_NAMESPACE
@@ -46,5 +46,8 @@ private:
 
 public slots:
     void slotReadyRead();
+    void handleServerDisconnected();
+    void handleConnected();
+    void handleError(QAbstractSocket::SocketError socketError);
 };
 #endif // MAINWINDOW_H
