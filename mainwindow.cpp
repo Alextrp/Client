@@ -96,7 +96,7 @@ void MainWindow::SendToServer()
         client->requestTact(portTime);
 
         QJsonObject json;
-        json["id"] = 1;
+        json["id"] = QDateTime::currentSecsSinceEpoch() - 1725484578;
         json["timestamp"] = client->takt;
         json["config"] = ui->comboBox->currentText();
         json["priority"] = ui->comboBox_2->currentText().toInt();
