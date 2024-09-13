@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <timeClient.h>
 #include <QComboBox>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

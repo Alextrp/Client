@@ -93,10 +93,18 @@ void MainWindow::SendToServer()
 {
     if(socket->state() == QAbstractSocket::ConnectedState) {
         timer->stop();
+        int tmp = client->takt;
         client->requestTact(portTime);
 
+        int tmp2 = tmp - client->takt;
+
+        if(tmp2 != 0)
+        {
+            ui->textBrowser->append("Время было откорректировано на " + QString::number(tmp2));
+        }
+
         QJsonObject json;
-        json["id"] = QDateTime::currentSecsSinceEpoch() - 1725484578;
+        json["id"] = QRandomGenerator::global()->bounded(1, QDateTime::currentSecsSinceEpoch());
         json["timestamp"] = client->takt;
         json["config"] = ui->comboBox->currentText();
         json["priority"] = ui->comboBox_2->currentText().toInt();
