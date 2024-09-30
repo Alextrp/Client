@@ -23,8 +23,10 @@ public:
     void setupComboBox(QComboBox* comboBox);
     ~MainWindow();
     qint64 portTime;
+    void setLogLevel(int level);
 
 private slots:
+
     void on_pushButton_clicked();
 
     void on_lineEdit_returnPressed();
@@ -43,6 +45,7 @@ private:
     quint16 nextBlockSize;
     QTimer *timer;
     TimeClient *client;
+    int logLevel;              // Уровень логирования
 
 
 public slots:

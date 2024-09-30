@@ -33,7 +33,7 @@ void TimeClient::processPendingDatagrams() {
             takt = syncedTact;
         } else {
             qDebug() << "Received unexpected data:" << datagram.data();
-            takt = QDateTime::currentSecsSinceEpoch();
+            //takt = QDateTime::currentSecsSinceEpoch();
         }
     }
 }

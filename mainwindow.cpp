@@ -36,15 +36,34 @@ MainWindow::~MainWindow() {
 
 void MainWindow::on_pushButton_clicked()
 {
-    QString hostAddress = ui->lineEdit_2->text().isEmpty() ? "127.0.0.1" : ui->lineEdit_2->text();
-    socket->connectToHost(hostAddress, 2323);
+    if (ui->pushButton->isChecked()) {
+        // Подключение к серверу
+        QString hostAddress = ui->lineEdit_2->text().isEmpty() ? "127.0.0.1" : ui->lineEdit_2->text();
+        socket->connectToHost(hostAddress, 2323);
 
-    client->requestTact(portTime);
-    timer->start(1000);
+        client->requestTact(portTime);
+        timer->start(1000);
+
+        ui->pushButton->setText("Disconnect");
+        if(logLevel>0)
+            qDebug() << "Attempting to connect to server...";
+    } else {
+        // Отключение от сервера
+        socket->disconnectFromHost();
+        if (socket->state() != QAbstractSocket::UnconnectedState) {
+            socket->waitForDisconnected(3000);
+        }
+        timer->stop();
+        ui->pushButton->setText("Connect");
+
+        if(logLevel>0)
+            qDebug() << "Disconnected from server.";
+    }
 }
 
 void MainWindow::handleConnected()
 {
+
     qDebug() << "Успешное подключение к серверу!";
     ui->textBrowser->append("Успешное подключение к серверу!");
 }
@@ -87,6 +106,10 @@ void MainWindow::updateTaktLabel()
 {
     client->takt += 1;
     ui->label->setText(QString::number(client->takt));
+}
+
+void MainWindow::setLogLevel(int level) {
+    logLevel = level;
 }
 
 void MainWindow::SendToServer()
@@ -163,12 +186,16 @@ void MainWindow::slotReadyRead()
             int minCount = json["min_count"].toInt();
             int tactNumber = json["tact_number"].toInt();
 
-            qDebug() << "Received JSON:";
-            qDebug() << "ID:" << id;
-            qDebug() << "Timestamp:" << timestamp;
-            qDebug() << "Priority:" << priority;
-            qDebug() << "Min Count:" << minCount;
-            qDebug() << "Tact Number:" << tactNumber;
+
+            if(logLevel > 0)
+            {
+                qDebug() << "Received JSON:";
+                qDebug() << "ID:" << id;
+                qDebug() << "Timestamp:" << timestamp;
+                qDebug() << "Priority:" << priority;
+                qDebug() << "Min Count:" << minCount;
+                qDebug() << "Tact Number:" << tactNumber;
+            }
 
             ui->textBrowser->append("ID: " + QString::number(id));
             ui->textBrowser->append("Timestamp: " + QString::number(timestamp));
