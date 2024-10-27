@@ -7,6 +7,7 @@
 #include <QComboBox>
 #include <QStringList>
 #include "timeClient.h"
+#include <QRandomGenerator>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,9 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     socket = new QTcpSocket(this);
 
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
-    connect(socket, &QTcpSocket::disconnected, this, &MainWindow::handleServerDisconnected);
-    connect(socket, &QTcpSocket::connected, this, &MainWindow::handleConnected);
-    connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::handleError);
+    //connect(socket, &QTcpSocket::disconnected, this, &MainWindow::handleServerDisconnected);
+    //connect(socket, &QTcpSocket::connected, this, &MainWindow::handleConnected);
+    //connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::handleError);
 
     nextBlockSize = 0;
     setupComboBox(ui->comboBox);
@@ -128,7 +129,8 @@ void MainWindow::SendToServer()
 
         QJsonObject json;
         json["id"] = QRandomGenerator::global()->bounded(1, QDateTime::currentSecsSinceEpoch());
-        json["timestamp"] = client->takt;
+        json["timestamp"] = QJsonValue::fromVariant(QVariant::fromValue(client->takt));
+
         json["config"] = ui->comboBox->currentText();
         json["priority"] = ui->comboBox_2->currentText().toInt();
         json["min_count"] = 10;
@@ -180,11 +182,11 @@ void MainWindow::slotReadyRead()
             QJsonObject json = doc.object();
 
             int id = json["id"].toInt();
-            quint64 timestamp = json["timestamp"].toInt();
+            quint64 timestamp = json["timestamp"].toVariant().toULongLong();
             QString config = json["config"].toString();
             int priority = json["priority"].toInt();
             int minCount = json["min_count"].toInt();
-            int tactNumber = json["tact_number"].toInt();
+            quint64 tactNumber = json["tact_number"].toVariant().toULongLong();
 
 
             if(logLevel > 0)
@@ -213,10 +215,10 @@ void MainWindow::slotReadyRead()
 
 
 
-void MainWindow::on_lineEdit_returnPressed()
-{
-    SendToServer();
-}
+// void MainWindow::on_lineEdit_returnPressed()
+// {
+//     SendToServer();
+// }
 
 
 void MainWindow::on_pushButton_2_clicked()
