@@ -3,6 +3,10 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkDatagram>
+#include <QDebug>
 
 class TimeClient : public QObject {
     Q_OBJECT
@@ -10,20 +14,24 @@ class TimeClient : public QObject {
 public:
     explicit TimeClient(QObject *parent = nullptr);
 
-    void requestTact(quint16 portTime);   // Запрос такта с сервера
-    bool checkUdpPort(quint16 portTime);  // Проверка доступности UDP порта
-    quint64 takt;                         // Синхронизированный такт
-    QString status;                       // Статус соединения
-
-private slots:
-    void processPendingDatagrams();       // Обработка входящих данных
-    //void handleSocketError(QAbstractSocket::SocketError socketError); // Обработка ошибок сокета
-
-private:
-    QUdpSocket *udpSocket;                // UDP сокет для работы
+    // Метод для запроса синхронизации такта с сервером
+    void requestTact(quint16 portTime);
+    qint64 takt = 0;          // Текущее значение такта
 
 signals:
-    void udpResponseReceived(bool success);  // Сигнал для уведомления о результате
+    // Сигнал для оповещения об обновленном такте
+    void tactUpdated(qint64 newTact);
+
+private slots:
+    // Обработка полученных данных
+    void processPendingDatagrams();
+
+    // Обработка ошибок сокета
+    void handleSocketError(QAbstractSocket::SocketError socketError);
+
+private:
+    QUdpSocket *udpSocket;    // Сокет для передачи данных по UDP
+    QString status;           // Статус подключения
 };
 
 #endif // TIMECLIENT_H

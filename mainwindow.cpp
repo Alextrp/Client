@@ -105,9 +105,12 @@ void MainWindow::handleError(QAbstractSocket::SocketError socketError)
 
 void MainWindow::updateTaktLabel()
 {
-    client->takt += 1;
+    client->requestTact(portTime);
+
     ui->label->setText(QString::number(client->takt));
+    client->takt = 0;
 }
+
 
 void MainWindow::setLogLevel(int level) {
     logLevel = level;
@@ -223,7 +226,14 @@ void MainWindow::slotReadyRead()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    SendToServer();
+    if(client->takt==0)
+    {
+        ui->textBrowser->append("Сервер времени отключен, отправка сообщений запрещена!");
+    }
+    else
+    {
+       SendToServer();
+    }
 }
 
 
